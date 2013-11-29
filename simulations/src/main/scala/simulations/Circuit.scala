@@ -79,30 +79,30 @@ abstract class CircuitSimulator extends Simulator {
   
   def demux(in: Wire, c: List[Wire], out: List[Wire]) {
       def doDemux(outIndex: Int, acc: Wire, c: List[Wire]) {
-		  c match {
-		    case Nil => 
-		      andGate(acc, in, out(outIndex))
-		    case head::tail =>
-		      var index = outIndex*2
-		      val newAcc, newAcc2 = new Wire
-		      if (head.getSignal == true) {
-		         index = index +1
-		         andGate(acc, head, newAcc)
-		      } else {
-		        inverter(head, newAcc2);
-		        andGate(acc, newAcc2, newAcc)
-		      }
-		      
-		      doDemux(index, newAcc, tail)
+                  c match {
+                    case Nil => 
+                      andGate(acc, in, out(outIndex))
+                    case head::tail =>
+                      var index = outIndex*2
+                      val newAcc, newAcc2 = new Wire
+                      if (head.getSignal == true) {
+                         index = index +1
+                         andGate(acc, head, newAcc)
+                      } else {
+                        inverter(head, newAcc2);
+                        andGate(acc, newAcc2, newAcc)
+                      }
+                      
+                      doDemux(index, newAcc, tail)
         }
       }
-	   
+           
       def start() {
           afterDelay(DemuxGateDelay) { 
-	          for {o <- out} yield o.setSignal(false)
-	          if (in.getSignal == true) {
-	             doDemux(0, in, c)
-	          }
+                  for {o <- out} yield o.setSignal(false)
+                  if (in.getSignal == true) {
+                     doDemux(0, in, c)
+                  }
           }
       }
               

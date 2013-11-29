@@ -30,16 +30,16 @@ class EpidemySimulator extends Simulator {
   
   // create persons with 1 percent infected.
   def createPeople(num : Int) : List[Person] = {
-	 val people = for (p <- (1 to num).toList) yield new Person(p)
-	 // make 1% people infected
+         val people = for (p <- (1 to num).toList) yield new Person(p)
+         // make 1% people infected
      val numSick : Int = (population * prevalenceRate).toInt
-	 do {
-	   val idx = randomBelow(population)
-	      people(idx).infected = true
+         do {
+           val idx = randomBelow(population)
+              people(idx).infected = true
      } while (people.count(p => p.infected) < numSick)
      
      people.foreach(p => p.start())
-	 people 
+         people 
   } 
   
   class Person (val id: Int) {
@@ -67,61 +67,62 @@ class EpidemySimulator extends Simulator {
         
     def checkInfection() : Boolean = {
        if (dead) false
-	   if (!infected && roomHasSickPeople()) {
-		  if (randomBelow(100) <= transmissibilityRate) {
-			  infected = true
-			  return true
-		  }
-	   } 
-	  
-	   return false
+           if (!infected && roomHasSickPeople()) {
+                  if (randomBelow(100) <= transmissibilityRate) {
+                          infected = true
+                          return true
+                  }
+           } 
+          
+           return false
      }
   
-    def move() = {
+    def move() : Unit = {
        if (!dead) {
-	       val whichDir = randomBelow(4)
-		   var nextRow = row
-		   var nextCol = col
-		   if (whichDir == up) { if (row == 0) row = roomRows-1 else row = row - 1 }
-		   else if (whichDir == down) { nextRow = (row + 1) % roomRows }
-		   else if (whichDir == left) { if (col == 0) col = roomColumns - 1 else col = col - 1 }
-		   else if (whichDir == right) { nextCol = (col + 1) % roomColumns }
-		   
-		   if (!roomHasVisbilySickPeople(nextRow, nextCol)) {
-			   row = nextRow
-			   col = nextCol
-		   }
-       }
+           afterDelay(randomBelow(daysToMove)) {
+	           val whichDir = randomBelow(4)
+               var nextRow = row
+               var nextCol = col
+               if (whichDir == up) { if (row == 0) row = roomRows-1 else row = row - 1 }
+               else if (whichDir == down) { nextRow = (row + 1) % roomRows }
+               else if (whichDir == left) { if (col == 0) col = roomColumns - 1 else col = col - 1 }
+               else if (whichDir == right) { nextCol = (col + 1) % roomColumns }
+               
+               if (!roomHasVisbilySickPeople(nextRow, nextCol)) {
+                   row = nextRow
+                   col = nextCol
+               }
+               
+               if (checkInfection()) afterInfection()
+               move()
+           }
+        }
     }
     
     def afterInfection() : Unit = {
         if (!dead) {
-	        afterDelay(incubationDays) {
-	            sick = true
-		        afterDelay(infectedDaysToDie) {
-		          dead = randomBelow(100) < deathRate
-		           if (!dead) {
-		              afterDelay(infectedDaysToImmune) {
-		                immune = true
-		                afterDelay(infectedDaysToHealthy) {
-		                   sick = false
-		                   immune = false
-		                   infected = false
-		                   start()
-		                }
-		              }
-		           }
-		        }
-		    }
+            afterDelay(incubationDays) {
+                sick = true
+                    afterDelay(infectedDaysToDie) {
+                      dead = randomBelow(100) < deathRate
+                       if (!dead) {
+                          afterDelay(infectedDaysToImmune) {
+                            immune = true
+                            afterDelay(infectedDaysToHealthy) {
+                               sick = false
+                               immune = false
+                               infected = false
+                            }
+                          }
+                       }
+                    }
+                }
         }
     }
     
     def start() : Unit = {
       if (infected == true)  afterInfection()
-      afterDelay(randomBelow(daysToMove)) {
-	      move()
-	      if (checkInfection()) afterInfection()
-      }
+      move()
     }
   }
 }
