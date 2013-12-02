@@ -37,7 +37,7 @@ object Main {
     //    and continues with a `"Server timeout!"` message
     val timeOut: Future[String] = {
       val p = Promise[String]()
-      Future.delay(200 seconds) onComplete {case _ => p.success("Server timeout!")}
+      Future.delay(20 seconds) onComplete {case _ => p.success("Server timeout!")}
       p.future
     }
     
