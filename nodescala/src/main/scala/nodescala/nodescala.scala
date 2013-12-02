@@ -49,9 +49,17 @@ trait NodeScala {
   def start(relativePath: String)(handler: Request => Response): Subscription = {
     val l = createListener(relativePath)
     val sub = TokenSource(l.start())
-    l.createContext({ex => 
-      respond(ex, sub.cancellationToken, handler(ex.request))})
+    process(l, sub.cancellationToken, handler)
     sub
+  }
+  
+  def process(l: Listener, token: CancellationToken, handler: Request => Response) : Unit = {
+    if (!token.isCancelled) {	
+	    l.nextRequest() onSuccess { case (req, ex) =>
+			respond(ex, token, handler(req))
+			process(l, token, handler)
+	    }
+    }
   }
 }
 
